@@ -3,8 +3,10 @@
 #include <mcp_can.h>
 #include <SPI.h>
 
-const int pulsePin = 2; // Pin, an dem die Pulse eingelesen werden
+const int pulsePinA = 2; // Pin für Signal A des Inkrementalgebers
+const int pulsePinB = 3; // Pin für Signal B des Inkrementalgebers
 volatile int pulseCount = 0;
+volatile bool direction = true; // true = vorwärts, false = rückwärts
 unsigned long lastMillis = 0;
 int teethCount = 80; // Standard-Zähnezahl
 unsigned long sendInterval = 1000; // Standard-Sendeintervall in ms
@@ -22,8 +24,10 @@ MCP_CAN CAN0(10); // Set CS to pin 10
 
 void setup() {
   Serial.begin(9600);
-  pinMode(pulsePin, INPUT);
-  attachInterrupt(digitalPinToInterrupt(pulsePin), countPulse, RISING);
+  pinMode(pulsePinA, INPUT);
+  pinMode(pulsePinB, INPUT);
+  attachInterrupt(digitalPinToInterrupt(pulsePinA), countPulseA, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(pulsePinB), countPulseB, CHANGE);
 
   // EEPROM initialisieren und gespeicherte Werte laden
   EEPROM.begin();
@@ -133,9 +137,10 @@ void loop() {
 
   if (millis() - lastSendMillis >= sendInterval) { // Sendeintervall erreicht
     float frequency = pulseCount / (float)teethCount;
-    byte data[4];
+    byte data[5];
     memcpy(data, &frequency, sizeof(frequency));
-    CAN0.sendMsgBuf(canID, 0, 4, data); // Drehzahl über CAN senden
+    data[4] = direction ? 1 : 0; // Drehrichtung hinzufügen (1 = vorwärts, 0 = rückwärts)
+    CAN0.sendMsgBuf(canID, 0, 5, data); // Drehzahl und Drehrichtung über CAN senden
     lastSendMillis = millis();
   }
 
@@ -145,6 +150,20 @@ void loop() {
   }
 }
 
-void countPulse() {
+void countPulseA() {
+  if (digitalRead(pulsePinA) == digitalRead(pulsePinB)) {
+    direction = true; // vorwärts
+  } else {
+    direction = false; // rückwärts
+  }
+  pulseCount++;
+}
+
+void countPulseB() {
+  if (digitalRead(pulsePinA) != digitalRead(pulsePinB)) {
+    direction = true; // vorwärts
+  } else {
+    direction = false; // rückwärts
+  }
   pulseCount++;
 }
