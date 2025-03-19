@@ -2,7 +2,11 @@
 
 ## Übersicht
 Dieses Projekt verwendet einen Arduino Nano 33 IoT, um Pulse von einem Geber zu zählen, die Drehzahl in Hertz zu berechnen und die Ergebnisse über CAN zu senden.  
-Die Einstellungen können über Bluetooth (BLE) verändert und im EEPROM gespeichert werden.
+Die Einstellungen können über Bluetooth (BLE) verändert und im EEPROM gespeichert werden.  
+Über die Flankenauswertung der beiden Signale des Inkremental-Gebers kann di Drehrichtung bestiimt werden.
+
+![image](https://github.com/user-attachments/assets/5c4ded08-62ab-4ced-8691-2056c78c2fd6)
+
 
 ## Hardware
 - Arduino Nano 33 IoT
