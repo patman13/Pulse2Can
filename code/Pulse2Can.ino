@@ -19,6 +19,7 @@ BLEIntCharacteristic teethCharacteristic("2A29", BLERead | BLEWrite); // BLE Cha
 BLEUnsignedLongCharacteristic intervalCharacteristic("2A2A", BLERead | BLEWrite); // BLE Charakteristik für das Sendeintervall
 BLEUnsignedLongCharacteristic canIDCharacteristic("2A2B", BLERead | BLEWrite); // BLE Charakteristik für die CAN-ID
 BLEUnsignedLongCharacteristic calcIntervalCharacteristic("2A2C", BLERead | BLEWrite); // BLE Charakteristik für das Zeitintervall der Drehzahlberechnung
+BLEUnsignedLongCharacteristic rpmCharacteristic("2A2D", BLERead | BLENotify); // BLE Charakteristik für die Drehzahl
 
 MCP_CAN CAN0(10); // Set CS to pin 10
 
@@ -60,6 +61,7 @@ void setup() {
   configService.addCharacteristic(intervalCharacteristic);
   configService.addCharacteristic(canIDCharacteristic);
   configService.addCharacteristic(calcIntervalCharacteristic);
+  configService.addCharacteristic(rpmCharacteristic);
   BLE.addService(configService);
 
   teethCharacteristic.writeValue(teethCount);
@@ -129,16 +131,23 @@ void loop() {
     // Drehzahl in Hz berechnen
     float frequency = pulses / (float)teethCount;
 
-    Serial.print("Drehzahl (Hz): ");
-    Serial.println(frequency);
+    // Frequenz in mHz umrechnen und als Integer speichern
+    unsigned long frequency_mHz = (unsigned long)(frequency * 1000);
+
+    Serial.print("Drehzahl (mHz): ");
+    Serial.println(frequency_mHz);
+
+    // Drehzahl über BLE ausgeben
+    rpmCharacteristic.writeValue(frequency_mHz);
 
     lastMillis = millis();
   }
 
   if (millis() - lastSendMillis >= sendInterval) { // Sendeintervall erreicht
     float frequency = pulseCount / (float)teethCount;
+    unsigned long frequency_mHz = (unsigned long)(frequency * 1000);
     byte data[5];
-    memcpy(data, &frequency, sizeof(frequency));
+    memcpy(data, &frequency_mHz, sizeof(frequency_mHz));
     data[4] = direction ? 1 : 0; // Drehrichtung hinzufügen (1 = vorwärts, 0 = rückwärts)
     CAN0.sendMsgBuf(canID, 0, 5, data); // Drehzahl und Drehrichtung über CAN senden
     lastSendMillis = millis();
