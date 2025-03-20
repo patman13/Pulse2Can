@@ -31,7 +31,7 @@ mcp_can: Für die CAN-Kommunikation
 SPI: Für die Kommunikation mit dem MCP2515 CAN-Modul  
 
 
-
+<img width="796" alt="image" src="https://github.com/user-attachments/assets/015550cb-2dad-4ca9-bcf0-2eb6851040a6" />
 
 ![image](https://github.com/user-attachments/assets/60dc3366-5a1d-4c1a-997b-ad4f601f1701)
 ![image](https://github.com/user-attachments/assets/ea37aa70-00be-40f5-b0d0-e5960fdf4fff)
